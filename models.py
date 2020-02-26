@@ -50,26 +50,23 @@ class SleepPredictionCNN(nn.Module):
         self.kernel_sizes = kernel_sizes
         conv_blocks = []
         for kernel_size in kernel_sizes:
-            # maxpool kernel_size must <= sentence_len - kernel_size+1, otherwise, it could output empty
-            maxpool_kernel_size = sentence_len - kernel_size +1
             conv1d = nn.Conv1d(in_channels = embedding_dim, out_channels = num_filters, 
                                kernel_size = kernel_size, 
                                stride = 1)
             component = nn.Sequential(
                 conv1d,
                 nn.ReLU(),
-                nn.MaxPool1d(kernel_size = maxpool_kernel_size)
+                nn.MaxPool1d(kernel_size = sentence_len - kernel_size +1)
             )
 
             conv_blocks.append(component)
-        self.conv_blocks = nn.ModuleList(conv_blocks)   # ModuleList is needed for registering parameters in conv_blocks
+        self.conv_blocks = nn.ModuleList(conv_blocks)
         self.fc = nn.Linear(num_filters*len(kernel_sizes), num_classes)
         self.dropout = nn.Dropout(p=dropout_p)
 
 
-    def forward(self, x, h0=None):       # x: (batch, sentence_len)
-        #x = self.embedding(x)   # embedded x: (batch, sentence_len, embedding_dim)
-        x = x.transpose(1,2)    # needs to convert x to (batch, embedding_dim, sentence_len)
+    def forward(self, x, h0=None):
+        x = x.transpose(1,2)
         x_list= [conv_block(x) for conv_block in self.conv_blocks]
         out = torch.cat(x_list, 2)
         out = out.view(out.size(0), -1)
