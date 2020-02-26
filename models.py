@@ -45,7 +45,7 @@ class SleepPredictionMLP(nn.Module):
         
 class SleepPredictionCNN(nn.Module):
     def __init__(self, kernel_sizes=[3,4,5], num_filters=100, embedding_dim=125, 
-                 num_classes=3, dropout_p = 0.0):
+                 num_classes=3, dropout_p = 0.0, sentence_len = 10):
         super(SleepPredictionCNN, self).__init__()
         self.kernel_sizes = kernel_sizes
         conv_blocks = []
@@ -78,27 +78,29 @@ class SleepPredictionCNN(nn.Module):
     
 
 class SleepPredictionSeq(nn.Module):
-    def __init__(self, hidden_size, input_dropout_p=0, 
-                 dropout_p=0, n_layers=1, embed_size=125,
-                 bidirectional=False, rnn_cell='lstm'):
-        super(SleepPredictionLSTM, self).__init__()
-        
+    def __init__(self, hidden_size=256, input_dropout_p=0, 
+                 num_classes=3, dropout_p=0, n_layers=1, 
+                 embed_size=125, bidirectional=False, rnn_cell='lstm'):
+        super(SleepPredictionSeq, self).__init__()
+
         self.hidden_size = hidden_size
         self.n_layers = n_layers
         self.input_dropout_p = input_dropout_p
         self.input_dropout = nn.Dropout(p=input_dropout_p)
-        self.linear = nn.Linear(11, embed_size)
+        self.linear = nn.Linear(11, hidden_size)
         self.rnn_cell = getattr(nn, rnn_cell.upper())
         self.dropout_p = dropout_p
         self.rnn = self.rnn_cell(embed_size, hidden_size, n_layers,
                                  batch_first=True, bidirectional=bidirectional,
                                  dropout=dropout_p)
+        self.fc = nn.Linear(hidden_size*10, num_classes)
 
     def forward(self, x, h0=None):
         if h0 is not None:
             h0 = self.linear(h0)
             if self.rnn_cell is nn.LSTM:
-                h0 = (h0, h0)
+                h0 = (h0.unsqueeze(0), h0.unsqueeze(0))
         embedded = self.input_dropout(x)
-        output, hidden = self.rnn(embedded, h0)
-        return output, hidden
+        output, _ = self.rnn(embedded, h0)
+        output = output.contiguous().view(output.size(0), -1)
+        return F.softmax(self.fc(output), dim=1)

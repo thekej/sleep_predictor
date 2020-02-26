@@ -117,12 +117,12 @@ def main(args):
     # Build the models
     logging.info("Building Sleep Stage Predictor...")
     if args.mode == 'mlp':
-        model = SleepPredictionMLP(1250, 256, num_classes=args.output_size,
+        model = SleepPredictionMLP(args.input_dim, 256, num_classes=args.output_size,
                                  num_layers=1, dropout_p=0.0, w_norm=False)
     elif args.mode == 'cnn':
-        model = SleepPredictionCNN(output_size=args.output_size)
+        model = SleepPredictionCNN(num_classes=args.output_size)
     else:
-        model = SleepPredictionSeq(output_size=args.output_size)
+        model = SleepPredictionSeq(num_classes=args.output_size)
     pre = 0
     if args.pretrained:
         model.load_state_dict(torch.load(args.model_path))
@@ -243,6 +243,7 @@ if __name__ == '__main__':
     # Model parameters.
     parser.add_argument('--mode', type=str, default='mlp',
                         help='Type of cnn model.')
+    parser.add_argument('--input-dim', type=int, default=1250)
     parser.add_argument('--output-size', type=int , default=3,
                         help='Number of classes.')
     parser.add_argument('--pretrained', action='store_true',

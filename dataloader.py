@@ -33,7 +33,7 @@ class Dataset(data.Dataset):
             if self.model_type == 'mlp':
                 self.eegs = annos['mlp']#self.features[:, 11:]
             else:
-                self.eegs = annos['no-mlp']#self.features[:, 11:].reshape(10, -1) 
+                self.eegs = annos['no_mlp']#self.features[:, 11:].reshape(10, -1) 
             self.conditions = annos['conditions']#self.features[:, :11]
             self.labels = pd.read_csv(self.labels_data).values[:, 1]
 
