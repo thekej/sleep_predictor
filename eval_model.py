@@ -160,7 +160,7 @@ def main(args):
         logging.info('Step [%d/%d], batch accuracy: %.4f' % (
                     i, total_steps, (pred == labels).sum().item() / params.batch_size))
     with open("y_benchmark.csv", "w") as f:
-        f.write("".join(["id,label\n"] + ["{},{}\n".format(i, y) for i, y in enumerate(y_pred)]))
+        f.write("".join(["id,label\n"] + ["{},{}\n".format(i, y) for i, y in enumerate(preds)]))
         
 
 if __name__ == '__main__':
