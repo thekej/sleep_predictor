@@ -119,7 +119,7 @@ def main(args):
 
     # Build data loader.
     logging.info("Building data loader...")
-    data_loader = get_data_loader(params.dataset, params.labels_data, params.batch_size, shuffle=False,
+    data_loader = get_data_loader(args.dataset, params.labels_data, params.batch_size, shuffle=False,
                                   num_workers=params.num_workers, model_type=params.mode)
     logging.info("Done")
 
@@ -154,11 +154,11 @@ def main(args):
         # Forward.
         out = model(eegs, conditions)
         
-        _, preds = torch.max(out.data, 1)
-        preds.extend(preds.tolist())
+        _, pred = torch.max(out.data, 1)
+        preds.extend(pred.tolist())
         # Evaluation and learning rate updates.
         logging.info('Step [%d/%d], batch accuracy: %.4f' % (
-                    i, total_steps, (preds == labels).sum().item() / params.batch_size))
+                    i, total_steps, (pred == labels).sum().item() / params.batch_size))
     with open("y_benchmark.csv", "w") as f:
         f.write("".join(["id,label\n"] + ["{},{}\n".format(i, y) for i, y in enumerate(y_pred)]))
         
